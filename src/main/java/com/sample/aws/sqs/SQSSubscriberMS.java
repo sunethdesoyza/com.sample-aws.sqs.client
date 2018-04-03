@@ -1,4 +1,4 @@
-package com.aepona.concert.md;
+package com.sample.aws.sqs;
 
 import java.util.ResourceBundle;
 import java.util.concurrent.Executor;

@@ -1,9 +1,6 @@
-package com.aepona.concert.md;
+package com.sample.aws.sqs;
 
-import java.io.FileInputStream;
-import java.io.IOException;
 import java.util.Date;
-import java.util.Properties;
 import java.util.ResourceBundle;
 
 import com.amazonaws.auth.AWSStaticCredentialsProvider;
