@@ -1,6 +1,6 @@
 package com.sample.aws.sqs;
 
-import java.util.ResourceBundle;
+import java.util.Properties;
 import java.util.concurrent.Executor;
 import java.util.concurrent.Executors;
 
@@ -14,24 +14,26 @@ import com.amazonaws.services.sqs.AmazonSQSClientBuilder;
 import com.amazonaws.services.sqs.model.DeleteMessageRequest;
 import com.amazonaws.services.sqs.model.ReceiveMessageRequest;
 import com.amazonaws.services.sqs.model.ReceiveMessageResult;
+import com.sample.aws.util.ResourceUtil;
 
 public class SQSSubscriberMS {
 	private static Logger log = LoggerFactory.getLogger(SQSSubscriberMS.class);
 
-	public static void main(String[] args) {
-		ResourceBundle aws_properties = ResourceBundle.getBundle("aws");
-		ResourceBundle sqs_properties = ResourceBundle.getBundle("sqs");
+	private static Properties awsProperties = ResourceUtil.getResource("aws");
+	private static Properties sqsProperties = ResourceUtil.getResource("sqs");
 
-		BasicAWSCredentials awsCredentials = new BasicAWSCredentials(aws_properties.getString("access_key"),
-				aws_properties.getString("seceret_key"));
+	public static void main(String[] args) {
+
+		BasicAWSCredentials awsCredentials = new BasicAWSCredentials(awsProperties.getProperty("access_key"),
+				awsProperties.getProperty("seceret_key"));
 
 		
 		AmazonSQSClientBuilder builder = AmazonSQSClientBuilder.standard();
-		builder.setRegion(aws_properties.getString("region"));
+		builder.setRegion(awsProperties.getProperty("region"));
 		AmazonSQSClient client = (AmazonSQSClient) builder
 				.withCredentials(new AWSStaticCredentialsProvider(awsCredentials)).build();
 
-		String queue_url = client.getQueueUrl(sqs_properties.getString("topic")).getQueueUrl();
+		String queue_url = client.getQueueUrl(sqsProperties.getProperty("topic")).getQueueUrl();
 		Executor executor = Executors.newFixedThreadPool(5);
 		boolean consumer_flag=true;
 		

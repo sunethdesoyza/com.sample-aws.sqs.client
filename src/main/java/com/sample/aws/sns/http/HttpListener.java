@@ -1,8 +1,7 @@
 package com.sample.aws.sns.http;
 
-import java.net.InetAddress;
 import java.net.UnknownHostException;
-import java.util.ResourceBundle;
+import java.util.Properties;
 
 import org.eclipse.jetty.server.Connector;
 import org.eclipse.jetty.server.Server;
@@ -15,61 +14,67 @@ import com.amazonaws.auth.AWSStaticCredentialsProvider;
 import com.amazonaws.auth.BasicAWSCredentials;
 import com.amazonaws.services.sns.AmazonSNSClient;
 import com.amazonaws.services.sns.AmazonSNSClientBuilder;
-import com.amazonaws.services.sns.model.CreateTopicRequest;
-import com.amazonaws.services.sns.model.CreateTopicResult;
 import com.amazonaws.services.sns.model.SubscribeRequest;
 import com.sample.aws.sns.http.servlet.AmazonSNSServlet;
 import com.sample.aws.sns.http.servlet.TestServlet;
+import com.sample.aws.util.ResourceUtil;
 
 public class HttpListener {
 
 	private static Logger log = LoggerFactory.getLogger(HttpListener.class);
 
-	private static ResourceBundle listenerProperties = ResourceBundle.getBundle("listener");
-	private static ResourceBundle awsProperties = ResourceBundle.getBundle("aws");
-	private static ResourceBundle snsProperties = ResourceBundle.getBundle("sns");
-	
+	private static Properties listenerProperties = ResourceUtil.getResource("listener");
+	private static Properties awsProperties = ResourceUtil.getResource("aws");
+	private static Properties snsProperties = ResourceUtil.getResource("sns");
+
 	private Server server;
-	
+
 	public static void main(String[] args) throws UnknownHostException {
 		HttpListener httpListener = new HttpListener();
-		httpListener.subscribeToAwsSns();
+
 		httpListener.startListener();
+		httpListener.subscribeToAwsSns();
 	}
-	
+
 	private void subscribeToAwsSns() throws UnknownHostException {
+		log.info("Attempting to subscribe to the SNS topic @ {}" + snsProperties.getProperty("arn"));
 		
-		BasicAWSCredentials creds = new BasicAWSCredentials(awsProperties.getString("access_key"), awsProperties.getString("seceret_key"));
+		BasicAWSCredentials creds = new BasicAWSCredentials(awsProperties.getProperty("access_key"),
+				awsProperties.getProperty("seceret_key"));
 		AmazonSNSClientBuilder builder = AmazonSNSClientBuilder.standard();
-		AmazonSNSClient snsClient = (AmazonSNSClient) builder
-		.withCredentials(new AWSStaticCredentialsProvider(creds)).build();
-				
-		String address = InetAddress.getLocalHost().getHostAddress();
-		SubscribeRequest subscribeReq = new SubscribeRequest()
-		   .withTopicArn(snsProperties.getString("arn"))
-		   .withProtocol("http")
-		   .withEndpoint("http://" + address + ":" + snsProperties.getString("port"));
+		builder.setRegion(awsProperties.getProperty("region"));
+		AmazonSNSClient snsClient = (AmazonSNSClient) builder.withCredentials(new AWSStaticCredentialsProvider(creds))
+				.build();
+
+		String address = snsProperties.getProperty("public.subscription.ip");
+		String subscriptionUrl = snsProperties.getProperty("public.subscription.protocol") + "://" + address + ":"
+				+ snsProperties.getProperty("public.subscription.port") + "/"
+				+ snsProperties.getProperty("public.subscription.context.url");
+		SubscribeRequest subscribeReq = new SubscribeRequest().withTopicArn(snsProperties.getProperty("arn"))
+				.withProtocol(snsProperties.getProperty("public.subscription.protocol")).withEndpoint(subscriptionUrl);
 		snsClient.subscribe(subscribeReq);
-		
+
+		log.info("Subscribed URL - " + subscriptionUrl);
+		log.info("SubscribeRequest - " + snsClient.getCachedResponseMetadata(subscribeReq));
 	}
-	
+
 	private void startListener() {
 		server = new Server();
-        ServerConnector connector = new ServerConnector(server);
-        
-        ServletHandler servletHandler = new ServletHandler();
-        servletHandler.addServletWithMapping(TestServlet.class,"/test");
-        servletHandler.addServletWithMapping(AmazonSNSServlet.class,"/sns");
-        
-        connector.setPort(Integer.parseInt(listenerProperties.getString("port")));
-        server.setConnectors(new Connector[] {connector});
-        server.setHandler(servletHandler);
-        try {
+		ServerConnector connector = new ServerConnector(server);
+
+		ServletHandler servletHandler = new ServletHandler();
+		servletHandler.addServletWithMapping(TestServlet.class, "/"+listenerProperties.getProperty("test.context.url"));
+		servletHandler.addServletWithMapping(AmazonSNSServlet.class, "/"+snsProperties.getProperty("public.subscription.context.url"));
+
+		connector.setPort(Integer.parseInt(listenerProperties.getProperty("port")));
+		server.setConnectors(new Connector[] { connector });
+		server.setHandler(servletHandler);
+		try {
 			server.start();
-			log.info("Listener started at port : {}",listenerProperties.getString("port"));
+			log.info("Listener started at port : {}", listenerProperties.getProperty("port"));
 		} catch (Exception e) {
 			log.error("Error starting the listener : ", e);
 		}
-        
+
 	}
 }

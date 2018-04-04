@@ -25,7 +25,7 @@ public class AmazonSNSServlet extends HttpServlet {
 	private static Logger log = LoggerFactory.getLogger(AmazonSNSServlet.class);
 
 	protected void doPost(HttpServletRequest request, HttpServletResponse response) throws ServletException, IOException, SecurityException {
-
+		log.info("Request:{}:{}",request.getLocalAddr(),request.getLocalPort());
 	    //Get the message type header.
 	    String messagetype = request.getHeader("x-amz-sns-message-type");
 	    //If message doesn't have the message type header, don't process it.
@@ -172,5 +172,17 @@ public class AmazonSNSServlet extends HttpServlet {
 	    stringToSign += "Type\n";
 	    stringToSign += msg.getType() + "\n";
 	    return stringToSign;
+	}
+	
+	public void doGet(HttpServletRequest req, HttpServletResponse resp) {
+		log.info("Request:{}:{}",req.getLocalAddr(),req.getLocalPort());
+		resp.setContentType("application/json");
+		resp.setStatus(HttpServletResponse.SC_OK);
+		try {
+			resp.getWriter().println("{ \"Help\": \"Need to send a POST message for processing\"}");
+			
+		} catch (IOException e) {
+			log.error("Error occured while processing the response : ",e);
+		}
 	}
 }
