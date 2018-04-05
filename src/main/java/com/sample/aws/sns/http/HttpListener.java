@@ -25,7 +25,7 @@ public class HttpListener {
 	private static Logger log = LoggerFactory.getLogger(HttpListener.class);
 
 	private static Properties listenerProperties = ResourceUtil.getResource("listener");
-	private static Properties awsProperties = ResourceUtil.getResource("aws",true);
+	private static Properties awsProperties = ResourceUtil.getResource("aws",false);
 	private static Properties snsProperties = ResourceUtil.getResource("sns");
 	private static Properties aimProperties = ResourceUtil.getResource("iam");
 
