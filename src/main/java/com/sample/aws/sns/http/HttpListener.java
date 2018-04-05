@@ -16,6 +16,7 @@ import com.amazonaws.services.sns.AmazonSNSClient;
 import com.amazonaws.services.sns.AmazonSNSClientBuilder;
 import com.amazonaws.services.sns.model.SubscribeRequest;
 import com.sample.aws.sns.http.servlet.AmazonSNSServlet;
+import com.sample.aws.sns.http.servlet.IamServlet;
 import com.sample.aws.sns.http.servlet.TestServlet;
 import com.sample.aws.util.ResourceUtil;
 
@@ -24,12 +25,17 @@ public class HttpListener {
 	private static Logger log = LoggerFactory.getLogger(HttpListener.class);
 
 	private static Properties listenerProperties = ResourceUtil.getResource("listener");
-	private static Properties awsProperties = ResourceUtil.getResource("aws");
+	private static Properties awsProperties = ResourceUtil.getResource("aws",true);
 	private static Properties snsProperties = ResourceUtil.getResource("sns");
+	private static Properties aimProperties = ResourceUtil.getResource("iam");
 
 	private Server server;
 
 	public static void main(String[] args) throws UnknownHostException {
+		System.setProperty("aws.accessKeyId",aimProperties.getProperty("access_key"));
+		System.setProperty("aws.secretKey",aimProperties.getProperty("seceret_key"));
+		System.setProperty("aws.region",aimProperties.getProperty("region"));
+		
 		HttpListener httpListener = new HttpListener();
 
 		httpListener.startListener();
@@ -65,10 +71,12 @@ public class HttpListener {
 		ServletHandler servletHandler = new ServletHandler();
 		servletHandler.addServletWithMapping(TestServlet.class, "/"+listenerProperties.getProperty("test.context.url"));
 		servletHandler.addServletWithMapping(AmazonSNSServlet.class, "/"+snsProperties.getProperty("public.subscription.context.url"));
-
+		servletHandler.addServletWithMapping(IamServlet.class, "/user");
+		
 		connector.setPort(Integer.parseInt(listenerProperties.getProperty("port")));
 		server.setConnectors(new Connector[] { connector });
 		server.setHandler(servletHandler);
+		
 		try {
 			server.start();
 			log.info("Listener started at port : {}", listenerProperties.getProperty("port"));
