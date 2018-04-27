@@ -15,10 +15,10 @@ import com.amazonaws.services.sqs.AmazonSQSClientBuilder;
 import com.amazonaws.services.sqs.model.SendMessageRequest;
 import com.sample.aws.util.ResourceUtil;
 
-public class SqsSamplePublisher {
+public class SnsSamplePublisher {
 	
 	private static Properties awsProperties = ResourceUtil.getResource("aws");
-	private static Properties sqsProperties = ResourceUtil.getResource("sqs");
+	private static Properties sqsProperties = ResourceUtil.getResource("sns");
 
 	public static void main(String[] args) {
 		new Thread(() -> {
@@ -43,6 +43,13 @@ public class SqsSamplePublisher {
 					e.printStackTrace();
 				}
 				
+				AmazonSNSClientBuilder snsClientBuilder = AmazonSNSClientBuilder.standard().withCredentials(new EnvironmentVariableCredentialsProvider());
+				AmazonSNSClient snsClient =(AmazonSNSClient) snsClientBuilder.build();
+				
+				//builder.setRegion(region); // This is not required is the reagion is taken via ENV variables
+			//	PublishRequest publishRequest = new PublishRequest(topicArn, msg);
+			//	PublishResult publishResult = snsClient.publish(publishRequest);
+
 			}
 		}).start();;
 	}

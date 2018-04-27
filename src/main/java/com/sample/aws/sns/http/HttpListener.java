@@ -39,7 +39,7 @@ public class HttpListener {
 		HttpListener httpListener = new HttpListener();
 
 		httpListener.startListener();
-		httpListener.subscribeToAwsSns();
+		//httpListener.subscribeToAwsSns();
 	}
 
 	private void subscribeToAwsSns() throws UnknownHostException {
